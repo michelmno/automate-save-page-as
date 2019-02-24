@@ -1,10 +1,6 @@
 #!/bin/bash
 # save_page_as -- Save a webpage using your browser.
-# https://github.com/abiyani/automate-save-page-as
-# Last Modified By: Dan Jacobson
-# http://jidanni.org/
-# Last Modified On: Tue Oct  9 16:23:43 2018
-# Update Count    : 22
+# https://github.com/abiyani/automate-save-page-as/network
 
 set -e
 set -u
@@ -21,7 +17,7 @@ load_wait_time=4
 save_wait_time=8
 scriptname=$(basename $0)
 destination=.
-browser=${BROWSER?}
+browser=${BROWSER:=google-chrome}
 suffix=""
 url=""
 
