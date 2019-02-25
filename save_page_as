@@ -137,7 +137,7 @@ function validate_input() {
     destination="$(readlink -f "$destination")"  # Ensure absolute path
 
     case $browser in
-	google-chrome|chromium|firefox|epiphany);;
+	google-chrome|chromium|chromium-browser|firefox|epiphany);;
 	*) echo $0: ERROR: Browser $browser is not supported. 1>&2; exit 1;;
     esac
 
@@ -192,9 +192,12 @@ else
     savefile_dialog_title="Save file"
 fi
 # Find window id for the "Save file" dialog box
-savefile_wid="$(xdotool search --name "$savefile_dialog_title" | head -n 1)"
+case $browser in
+    firefox|chromium-browser) savefile_wid="$(xdotool getwindowfocus)";;
+    *) savefile_wid="$(xdotool search --name "$savefile_dialog_title" | head -n 1)";;
+esac
 if [[ ! "${savefile_wid}" =~ ${wid_re}  ]]; then
-    printf "ERROR: Unable to find window id for 'Save File' Dialog.\n" >&2
+    printf "ERROR: Unable to find window id for \'$savefile_dialog_title\' Dialog.\n" >&2
     exit 1
 fi
 
