@@ -20,6 +20,7 @@ destination=.
 browser=${BROWSER:=google-chrome}
 suffix=""
 url=""
+quiet=0
 
 function print_usage() { #Not too wide. Must fit on all screens.
     cat  1>&2 <<EOF
@@ -32,19 +33,20 @@ USAGE:
 URL                      The url of the web page to be saved.
 
 options:
+  -b, --browser          Browser executable to be used (must be one listed in
+        $scriptname source file. Default = \$BROWSER ($BROWSER)
   -d, --destination      Destination path. If a directory, then file is saved
         with default name inside the directory, else assumed to be full path
         of target file. Default = '$destination'
+  -h, --help             Display this help message and exit.
+  -q, --quiet            be quiet, do not printf INFO strings.
   -s, --suffix           An optional suffix string for the target file name
         Supply any dots yourself: e.g., -s .txt will add .txt
         (ignored if --destination arg is a full path).
-  -b, --browser          Browser executable to be used (must be one listed in
-        $scriptname source file. Default = \$BROWSER ($BROWSER)
   --load-wait-time       Number of seconds to wait for the page to be loaded
         (i.e., seconds to sleep before Ctrl+S is 'pressed'). Default = $load_wait_time
   --save-wait-time       Number of seconds to wait for the page to be saved
         (i.e., seconds to sleep before Ctrl+F4 is 'pressed'). Default = $save_wait_time
-  -h, --help             Display this help message and exit.
 
 Note: Save to "Webpage Complete" or "HTML Only" etc.: Many browsers
 remember the choice made last time you saved something.
@@ -89,6 +91,10 @@ do
             print_usage
             exit 0
             ;;
+        -q | --quiet)
+            quiet=1
+            shift
+            ;;
         -*)
             printf "ERROR: Unknown option: %s\n" "${1}">&2
             print_usage
@@ -125,8 +131,10 @@ function validate_input() {
     fi
 
     if [[ -d "${destination}" ]]; then
+        if [[ "$quiet" -eq 0 ]]; then
         printf "INFO: The specified destination ('%s') is a directory path,
         will save file inside it with the default name.\n" "${destination}">&2
+        fi
     else
         local basedir="$(dirname "${destination}")"
         if [[ ! -d "${basedir}" ]]; then
@@ -137,8 +145,8 @@ function validate_input() {
     destination="$(readlink -f "$destination")"  # Ensure absolute path
 
     case $browser in
-	google-chrome|chromium|chromium-browser|firefox|epiphany);;
-	*) echo $0: ERROR: Browser $browser is not supported. 1>&2; exit 1;;
+        google-chrome|chromium|chromium-browser|firefox|epiphany);;
+        *) echo $0: ERROR: Browser $browser is not supported. 1>&2; exit 1;;
     esac
 
     if ! command -v "${browser}" &>/dev/null; then
@@ -154,7 +162,7 @@ function validate_input() {
     fi
 
     if [[ $(has_non_printable_or_non_ascii "${destination}") -eq 1 ||
-	      $(has_non_printable_or_non_ascii "${suffix}") -eq 1 ]]; then
+          $(has_non_printable_or_non_ascii "${suffix}") -eq 1 ]]; then
         printf "ERROR: Either --destination ('%s') or --suffix ('%s') contains a non ascii
 or non-printable ascii character(s). " "${destination}" "${suffix}" >&2
         printf "'xdotool' does not mingle well with non-ascii characters
@@ -224,10 +232,12 @@ if [[ ! -z "${suffix}" ]]; then
     # but this is the only fix I can think for this special case right now. Of course it's easy to tweak the number of
     # Left key moves you need if you know your file types in advance.
     if [[ "${is_kde}" -eq 1 ]]; then
+        if [[ "$quiet" -eq 0 ]]; then
         printf "INFO: Desktop session is found to be '${DESKTOP_SESSION}',
 hence the full file name will be highlighted. " >&2
         printf "Assuming extension .html to move back 5 character left
 before adding suffix (change accordingly if you need to).\n" >&2
+        fi
         xdotool windowactivate "${savefile_wid}" key --delay 40 --clearmodifier End Left Left Left Left Left
     else
         xdotool windowactivate "${savefile_wid}" key --delay 20 --clearmodifiers Right
@@ -257,7 +267,9 @@ if [[ ! -z "${destination}" ]]; then
 fi
 xdotool windowactivate "${savefile_wid}" key --delay 20 --clearmodifiers Return
 
+if [[ "$quiet" -eq 0 ]]; then
 printf "INFO: Saving web page ...\n" >&2
+fi
 
 # Wait for the file to be completely saved
 sleep ${save_wait_time}
@@ -270,7 +282,9 @@ if [[ "${is_kde}" -eq 1 ]]; then
 else
     xdotool windowactivate "${browser_wid}" key --clearmodifiers "ctrl+F4"
 fi
+if [[ "$quiet" -eq 0 ]]; then
 printf "INFO: Done!\n">&2
+fi
 #Maybe also say:
 # echo See: #or Proof:
 # ls -l $destination
