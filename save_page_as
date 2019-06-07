@@ -21,6 +21,7 @@ browser=${BROWSER:=google-chrome}
 suffix=""
 url=""
 quiet=0
+debug=0
 
 function print_usage() { #Not too wide. Must fit on all screens.
     cat  1>&2 <<EOF
@@ -38,6 +39,7 @@ options:
   -d, --destination      Destination path. If a directory, then file is saved
         with default name inside the directory, else assumed to be full path
         of target file. Default = '$destination'
+  -D  --debug            debug using bash set -x
   -h, --help             Display this help message and exit.
   -q, --quiet            be quiet, do not printf INFO strings.
   -s, --suffix           An optional suffix string for the target file name
@@ -95,6 +97,10 @@ do
             quiet=1
             shift
             ;;
+        -D | --debug)
+            debug=1
+            shift
+            ;;
         -*)
             printf "ERROR: Unknown option: %s\n" "${1}">&2
             print_usage
@@ -112,6 +118,7 @@ do
     esac
 done
 
+[[ $debug == 1 ]] && set -ex && quiet=0
 # Returns 1 if input param contains any non-printable or non-ascii character, else returns 0
 # (Inspiration: http://stackoverflow.com/a/13596664/1857518)
 function has_non_printable_or_non_ascii() {
@@ -265,6 +272,8 @@ if [[ ! -z "${destination}" ]]; then
         xdotool type --delay 10 --clearmodifiers "${destination}"
     fi
 fi
+
+
 xdotool windowactivate "${savefile_wid}" key --delay 20 --clearmodifiers Return
 
 if [[ "$quiet" -eq 0 ]]; then
