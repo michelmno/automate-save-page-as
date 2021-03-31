@@ -186,6 +186,7 @@ validate_input
 sleep ${load_wait_time}
 
 # Find the id for the ${browser} window
+xdotool search --sync --onlyvisible --class "${browser}"
 browser_wid="$(xdotool search --sync --onlyvisible --class "${browser}" | head -n 1)"
 wid_re='^[0-9]+$'  # window-id must be a valid integer
 if [[ ! "${browser_wid}" =~ ${wid_re} ]]; then
@@ -208,7 +209,7 @@ else
 fi
 # Find window id for the "Save file" dialog box
 case $browser in
-    firefox|chromium-browser) savefile_wid="$(xdotool getwindowfocus)";;
+    firefox|chromium-browser|google-chrome) savefile_wid="$(xdotool getwindowfocus)";;
     *) savefile_wid="$(xdotool search --name "$savefile_dialog_title" | head -n 1)";;
 esac
 if [[ ! "${savefile_wid}" =~ ${wid_re}  ]]; then
